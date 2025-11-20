@@ -10,22 +10,42 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 # print (os.getcwd())
 
-file_path = 'address book'
+file_path = 'address book.txt'
 
+def check_file(contact_data) :
+
+    with open (file_path, 'r') as file :
+
+        file_data = file.read()
+
+        if contact_data in file_data :
+
+            print ('Contact Already Exists.')
+
+            return True 
+        
+        else :
+            
+            return False
+        
 def add_contact() :
 
-    name = input ('Enter Name: ').strip().lower()
+    name = input ('Enter Name: ').strip().capitalize()
     age = int (input ('Enter Your Age: '))
     country = input ('Enter Your Country: ').strip().capitalize()
     phone = input ('Enter Phone Number: ')
 
     contact_data = f"{name}, {age}, {country}, {phone}\n"
 
-    with open (file_path, 'a') as file :
+    result = check_file(contact_data)
 
-        file.write(contact_data)
+    if not result:
 
-    print (f'Contact For {name} Saved Successfully.')
+        with open (file_path, 'a') as file :
+
+            file.write(contact_data)
+
+        print (f'Contact For {name} Saved Successfully.')
 
 def view_contact() :
 
