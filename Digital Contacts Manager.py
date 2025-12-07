@@ -1,5 +1,9 @@
 import os 
 
+Consent_Terms = ('Yes', 'Ok', 'Yeah', 'Yup', 'Confirm', 'Y', 'O')
+
+Termination_Terms = ('No', 'Nope', 'Cancel','Done', 'Exit', 'N', 'D', 'E' )
+
 # print (os.getcwd())
 
 # print (os.path.abspath(__file__))
@@ -10,9 +14,21 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 # print (os.getcwd())
 
-file_path = 'address book.txt'
+file_path = 'digital contacts manager.txt'
+
+def ensure_data_file_exists() :
+
+    if not os.path.exists(file_path) :
+
+        print ('File Not Found. Creating New File...')
+
+        with open (file_path, 'w', encoding= 'utf-8') as file :
+
+            file.write('Name, Age, Country, Phone\n')
 
 def check_file(contact_data) :
+
+    ensure_data_file_exists()
 
     with open (file_path, 'r') as file :
 
@@ -20,14 +36,12 @@ def check_file(contact_data) :
 
         if contact_data in file_data :
 
-            print ('Contact Already Exists.')
-
             return True 
         
         else :
             
             return False
-        
+     
 def add_contact() :
 
     name = input ('Enter Name: ').strip().capitalize()
@@ -47,19 +61,36 @@ def add_contact() :
 
         print (f'Contact For {name} Saved Successfully.')
 
+    else :
+
+        print ('Contact Already Exists.')
+
 def view_contact() :
+
+    ensure_data_file_exists()
 
     count = 1
 
     with open (file_path, 'r') as file :
 
-        for info in file :
+        lines = file.readlines()
 
-            print (f'- {count} {info.strip()}')
+    contacts_lines = lines[1:]
 
-            count += 1
+    if not contacts_lines :
 
+        print ('No Contacts To See.')
+
+        return
+    
+    for info in contacts_lines :
+
+        print (f'- {str(count).zfill(2)}. {info.strip()}')
+        count += 1
+    
 def search_contacts() :
+
+    ensure_data_file_exists()
 
     search_term = input ('Enter Name: ').strip().lower()
 
@@ -101,7 +132,7 @@ def main_menu() :
 
             search_contacts()
 
-        elif choice == 'Exit' or choice == 'E' :
+        elif choice in Termination_Terms :
 
             print('Exiting...')
 
