@@ -1,5 +1,7 @@
 # 📚 Digital Contacts Manager (Python CLI)
 
+> Version 1.0 – Stable Release
+
 ### A foundational Python project showcasing core language skills and file persistence.
 
 This project is a simple Command Line Interface (CLI) application developed in Python. It simulates a basic address book system, allowing users to manage contacts and store them persistently in a text file.
@@ -36,7 +38,7 @@ This project is a practical demonstration of fundamental Python programming conc
 
 ### How to Run
 
-1. Download the main Python file (`digital address book.py`) to a local folder.
+1. Download the main Python file (`Digital Contacts Manager.py`) to a local folder.
 
 2. Open your terminal or Git Bash inside that folder.
 
@@ -51,4 +53,4 @@ python "digital address book.py"
 
 1. **Error Handling (`try/except`):** Implement robust input validation (e.g., preventing program crash if non-numeric input is entered for age).
 
-2. **CRUD Operations:** Add functionality to fully complete the CRUD cycle by allowing user
+2. **CRUD Operations:** Add functionality to fully complete the CRUD cycle by allowing users to update and delete contacts.
