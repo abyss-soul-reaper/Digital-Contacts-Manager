@@ -1,14 +1,14 @@
 import os 
 
+from datetime import datetime
+
+from uuid import uuid4
+
 Consent_Terms = ('Yes', 'Ok', 'Yeah', 'Yup', 'Confirm', 'Y', 'O')
 
 Termination_Terms = ('No', 'Nope', 'Cancel','Done', 'Exit', 'N', 'D', 'E' )
 
-# print (os.getcwd())
-
-# print (os.path.abspath(__file__))
-
-# print (os.path.dirname(os.path.abspath(__file__)))
+Available_features = ('Add', 'View', 'Search contacts', 'Update Info', 'Feedback', 'Contact Us',)
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -24,34 +24,46 @@ def ensure_data_file_exists() :
 
         with open (file_path, 'w', encoding= 'utf-8') as file :
 
-            file.write('Name, Age, Country, Phone\n')
+            file.write('Date,Name,Age,Address,Phone,ID\n')
 
-def check_file(contact_data) :
+def check_file(phone, exclude_id=None):
 
     ensure_data_file_exists()
 
-    with open (file_path, 'r') as file :
+    with open(file_path, 'r') as file:
 
-        file_data = file.read()
+        next(file, None)
 
-        if contact_data in file_data :
+        for line in file:
+            parts = line.strip().split(',')
 
-            return True 
-        
-        else :
-            
-            return False
-     
+            if len(parts) >= 6 and parts[4] == phone:
+
+                if exclude_id and parts[5] == exclude_id:
+                    continue
+                return True
+    return False
+
 def add_contact() :
 
     name = input ('Enter Name: ').strip().capitalize()
-    age = int (input ('Enter Your Age: '))
-    country = input ('Enter Your Country: ').strip().capitalize()
+    while True :
+        age_str = (input ('Enter Your Age: '))
+        if age_str.isdigit() :
+            age = int(age_str)
+            break
+        else :
+            print("❌ Age Can't Be Empty or Non-numeric. Enter Age:")
+    Address = input ('Enter Your Address: ').strip().title()
     phone = input ('Enter Phone Number: ')
 
-    contact_data = f"{name}, {age}, {country}, {phone}\n"
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-    result = check_file(contact_data)
+    contact_id = str(uuid4())
+
+    contact_data = f"{timestamp},{name},{age},{Address},{phone},{contact_id}\n"
+
+    result = check_file(phone)
 
     if not result:
 
@@ -100,7 +112,7 @@ def search_contacts() :
 
     found = False
 
-    for contact_line in all_contacts :
+    for contact_line in all_contacts[1:] :
 
         if search_term in contact_line.lower() :
 
@@ -112,25 +124,209 @@ def search_contacts() :
 
         print ('No Matching Contacts Found.')
 
+def get_info(current_data, termination_terms) :
+
+    current_name = current_data['Name']
+    current_age = current_data['Age']
+    current_address = current_data['Address']
+    current_phone = current_data['Phone']
+    current_id = current_data['ID']
+
+    print("User Data Update Options:")
+    print("1. Partial Update (Change one or more fields).")
+    print("2. Full Re-entry (Fill all fields again).")
+    print("3. Cancel Update.")
+
+    choice = input().strip()
+
+    if choice == '3' or choice in termination_terms :
+
+        print("🚫 Update operation cancelled.")
+        return None,None,None,None,None # Return None for all fields
+    
+    elif choice == '1' :
+
+        print("📝 Partial Update Mode (Leave blank to keep current value):")
+
+        # --- Name ---
+        new_name = input(f"   Name (Current: {current_name}): ").strip().capitalize()
+        new_name = new_name if new_name else current_name
+
+        # --- Age ---
+        new_age_str = input(f"   Age (Current: {current_age}): ").strip()
+
+        if not new_age_str:
+            new_age = current_age
+        elif new_age_str.isdigit():
+            new_age = int(new_age_str)
+        else:
+            print("⚠️ Invalid age. Keeping previous value.")
+            new_age = current_age
+
+
+        # --- Address ---
+        new_address = input(f"   Address (Current: {current_address}): ").strip().title()
+        new_address = new_address if new_address else current_address
+
+        # --- Phone ---
+        new_phone_input = input(f"   Phone (Current: {current_phone}): ")
+
+        if not new_phone_input:
+            new_phone = current_phone
+
+        elif new_phone_input == current_phone:
+            new_phone = current_phone
+
+        else:
+            if check_file(new_phone_input, current_id):
+                print("❌ This phone number already exists in another contact. Keeping old number.")
+                new_phone = current_phone
+            else:
+                new_phone = new_phone_input
+
+
+        return new_name, new_age, new_address, new_phone,current_id
+    
+    elif choice == '2' :
+
+        print("📝 Full Re-entry Mode (All fields must be filled):")
+
+        # --- New Name ---
+        new_name = input("   New Name: ").strip().capitalize()
+        while not new_name :
+            new_name = input("   Name Can\'t Be Empty. Enter Name: ")
+
+        # --- New Age ---
+        while True:
+            new_age_str = input("   New Age: ").strip()
+            if  new_age_str.isdigit():
+                new_age = int(new_age_str)
+                break
+            else :
+                print("❌ Age Can't Be Empty or Non-numeric. Enter Age:")
+
+        # --- New Address ---
+        new_address = input("   New Address: ").strip().title()
+        while not new_address :
+            new_address = input("   Address Can\'t Be Empty. Enter Address: ").strip().title()
+
+        # --- New Phone ---
+        new_phone = input("   New Phone: ")
+        while not new_phone :
+            new_phone = input("   Phone Can\'t Be Empty. Enter Phone: ")
+
+        return new_name, new_age, new_address, new_phone,current_id
+    
+    else :
+        print("⚠️ Invalid option. Update cancelled.")
+        return None, None, None, None, None
+
+def update_info(contact_id) :
+
+    lines = []
+    found_and_updated = False
+
+    try :
+
+        with open (file_path, 'r', encoding= 'utf-8') as file :
+            lines = file.readlines()
+
+    except FileNotFoundError :
+
+        print(f"❌ Error: User data file not found: {file_path}")
+        return
+    
+    header_line = lines[0] if lines else ''
+    data_lines = lines[1:]
+    
+    for i, line in enumerate(data_lines) :
+
+        parts = line.strip().split(',')
+
+        if len(parts) >= 6 and parts[5] == contact_id :
+
+            current_data = {
+                "Timestamp" : parts[0],
+                'Name' : parts[1].capitalize(),
+                'Age' : int(parts[2]),
+                'Address' : parts[3].title(),
+                'Phone' : parts[4],
+                'ID' : parts[5]
+            }
+
+            results = get_info(current_data, Termination_Terms)
+
+            if results[0] == None :
+                return None
+            
+            new_name,new_age,new_address,new_phone,current_id = results
+
+            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+            updated_line = f'{timestamp},{new_name},{new_age},{new_address},{new_phone},{current_id}\n'
+
+            data_lines[i] = updated_line
+            found_and_updated = True
+
+            break
+
+    if not found_and_updated :
+        print(f"❌ User with id '{contact_id}' not found.")
+        return None
+    
+    try :
+
+        with open (file_path, 'w', encoding= 'utf-8') as file :
+
+            if header_line :
+
+                file.write(header_line)
+
+            file.writelines(data_lines)
+
+            print("=" * 50)
+            print(f"✅ Success! User information for id {contact_id} has been updated and saved.")
+            print("=" * 50)
+
+    except Exception as e :
+        print(f"❌ An error occurred while writing to the file: {e}")
+    
+        return None
+        
+def show_features():
+
+    print("--- (Available Features) ---")
+    for index, feature in enumerate(Available_features, start= 1) :
+        print(f'- {index}. {feature}')
+    print("-" * 30)
+
 def main_menu() :
+
+    show_features()
 
     while True :
 
-        print ('What Do You Want To Choose?\nAdd\nView\nContact\nExit')
+        print ('Hello, How can i help you?')
 
         choice = input ().strip().capitalize()
 
-        if choice == 'Add' or choice == 'A' :
+        if choice in ('Add', 'A') :
 
             add_contact()
 
-        elif choice == 'View' or choice == 'V' :
+        elif choice in ('View', 'V') :
 
             view_contact()
 
-        elif choice == 'Contact' or choice == 'C' :
+        elif choice in ('Search contacts', 'Sc', 'S') :
 
             search_contacts()
+
+        elif choice in ('Update info', 'Up', 'Ui', 'U') :
+
+            contact_id = input('Enter the ID of the contact you want to update: ').strip()
+
+            update_info(contact_id)
 
         elif choice in Termination_Terms :
 
@@ -138,10 +334,17 @@ def main_menu() :
 
             break
 
+        elif choice in ('Features', 'Menu', 'Help', 'F', 'M', 'H') :
+
+            show_features()
+
         else :
 
             print ('Invalid choice.') 
 
+            show_features()
+
 if __name__ == '__main__' :
 
     main_menu()
+
