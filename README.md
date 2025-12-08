@@ -1,5 +1,8 @@
 # 📇 Digital Contacts Manager
 
+> Version 3.0
+
+
 **Digital Contacts Manager** is a Python application designed to manage contacts efficiently. It allows you to add, update, delete, view, and search contacts, along with additional utilities for sending feedback and accessing official contact information.
 
 ---
