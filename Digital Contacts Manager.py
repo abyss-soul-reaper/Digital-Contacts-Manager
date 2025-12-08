@@ -8,7 +8,7 @@ Consent_Terms = ('Yes', 'Ok', 'Yeah', 'Yup', 'Confirm', 'Y', 'O')
 
 Termination_Terms = ('No', 'Nope', 'Cancel','Done', 'Exit', 'N', 'D', 'E' )
 
-Available_features = ('Add', 'View', 'Search contacts', 'Update Info', 'Feedback', 'Contact Us',)
+Available_features = ('Add', 'Delete', 'View', 'Search contacts', 'Update Info', 'Feedback', 'Contact Us',)
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -76,6 +76,49 @@ def add_contact() :
     else :
 
         print ('Contact Already Exists.')
+    
+def delete_contact(contact_id) :
+
+    ensure_data_file_exists()
+    found = False
+    kept_lines = []
+
+    try:
+
+        with open(file_path, 'r', encoding= 'utf-8') as file :
+            header = next(file)
+            kept_lines.append(header)
+
+            for line in file :
+
+                parts = line.strip().split(',')
+
+                if len(parts) >= 6 and parts[5] == contact_id :
+                    found = True
+                    continue
+
+                kept_lines.append(line)
+
+    except FileNotFoundError:
+        print(f"❌ Error: User data file not found: {file_path}")
+        return
+
+    if not found :
+        print(f"❌ No contact found with ID: {contact_id}")
+        return
+    
+    try:
+
+        with open(file_path, 'w', encoding='utf-8') as file :
+
+            file.writelines(kept_lines)
+
+        print("=" * 60)
+        print(f"🗑️ Contact with ID {contact_id} has been successfully deleted.")
+        print("=" * 60)
+
+    except Exception as e:
+        print(f"❌ An error occurred while updating the file: {e}")
 
 def view_contact() :
 
@@ -334,7 +377,73 @@ def update_info(contact_id) :
         print(f"❌ An error occurred while writing to the file: {e}")
     
         return None
-        
+    
+def send_feedback(contact_id) :
+
+    file_name = 'Feedback.txt'
+
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    print("💬 Feedback and Suggestions Center 💬")
+    print("-" * 45)
+
+    feedback_text = input("Please write your feedback/suggestions (or leave blank to cancel):\n> ").strip()
+
+    if not feedback_text :
+
+        print("🚫 No feedback submitted. Thank you.")
+        return
+    
+    log_entry = f"{timestamp},{contact_id},{feedback_text}\n"
+
+    try :
+    
+        if not os.path.exists(file_name) :
+
+            print ('File Not Found. Creating New File...')
+
+            with open (file_name, 'w', encoding= 'utf-8') as file :
+
+                file.write('Time|Email|Feedback\n')
+
+                file.write(log_entry)
+
+        else :
+
+            with open(file_name, 'a', encoding='utf-8') as file:
+                file.write(log_entry)
+            
+        # Success message
+        print("-" * 45)
+        print("✅ Success! Your feedback has been successfully received. We appreciate your time.")
+
+    except Exception as e :
+
+        print(f"❌ An error occurred while saving the feedback: {e}")
+
+def contact_us():
+    """Displays all official and social contact channels."""
+    
+    print("📞 Contact Us & Support 📞")
+    print("=" * 55)
+    print("For sales, support, or inquiries, please use the following channels:")
+    print("-" * 55)
+
+    print("### Official Contact ###")
+    print("📧 Email Support: support@DCM.com") 
+    print("☎️ Phone (Sales): +20 100 123 4567")
+    print("📍 Main Office: 123 Autostrad St, New Cairo, Egypt")
+    print("-" * 55)
+
+    print("--- Social Media & Messaging ---")
+    print("🔵 Facebook: DCMOfficial")
+    print("📸 Instagram: @DCMEG")
+    print("🟢 WhatsApp: +20 124 879 2353 (Direct chat)")
+    print("💬 Telegram: t.me/DCMSupport")
+    print("🖥️ Website: www.DCM.com") 
+    
+    print("=" * 55)
+
 def show_features():
 
     print("--- (Available Features) ---")
@@ -356,6 +465,11 @@ def main_menu() :
 
             add_contact()
 
+        elif choice in ('Delete', 'Dl') :
+
+            contact_id = input('Enter the ID you want to delete: ').strip()
+            delete_contact(contact_id)  
+
         elif choice in ('View', 'V') :
 
             view_contact()
@@ -370,15 +484,25 @@ def main_menu() :
 
             update_info(contact_id)
 
+        elif choice in ('Feedback', 'Fb', 'F') :
+
+            contact_id = input('Enter the ID : ').strip()
+
+            send_feedback(contact_id)
+
+        elif choice in ('Contact us', 'Cu') :
+
+            contact_us()
+
+        elif choice in ('Features', 'Menu', 'Help', 'F', 'M', 'H') :
+
+            show_features()
+
         elif choice in Termination_Terms :
 
             print('Exiting...')
 
             break
-
-        elif choice in ('Features', 'Menu', 'Help', 'F', 'M', 'H') :
-
-            show_features()
 
         else :
 
