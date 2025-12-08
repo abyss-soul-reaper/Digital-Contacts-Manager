@@ -46,7 +46,7 @@ def check_file(phone, exclude_id=None):
 
 def add_contact() :
 
-    name = input ('Enter Name: ').strip().capitalize()
+    name = input ('Enter Name: ').strip().title()
     while True :
         age_str = (input ('Enter Your Age: '))
         if age_str.isdigit() :
@@ -106,19 +106,61 @@ def search_contacts() :
 
     search_term = input ('Enter Name: ').strip().lower()
 
-    with open (file_path, 'r') as file :
-
-        all_contacts = file.readlines()
-
     found = False
 
-    for contact_line in all_contacts[1:] :
+    count = 1
 
-        if search_term in contact_line.lower() :
+    try :
 
-            print (contact_line.strip())
+        with open (file_path, 'r', encoding= 'utf-8') as file :
+            next(file, None)
+            header_printed = False
 
-            found = True
+            for line in file : 
+
+                original_parts = line.strip().split(',')
+
+                searchable_line = line.lower()
+
+                if search_term in searchable_line :
+
+                    if len(original_parts) >= 6 :
+
+                        if not header_printed :
+
+                            print("=" * 80)
+                            print(f"{'Name':<25}{'Age':<10}{'Address':<30}{'Phone':<15}{'ID':<70}")
+                            print("=" * 80)
+                            header_printed = True
+
+                        contact = {
+                            "Timestamp" : original_parts[0],
+                            'Name' : original_parts[1].title(),
+                            'Age' : int(original_parts[2]),
+                            'Address' : original_parts[3].title(),
+                            'Phone' : original_parts[4],
+                            'ID' : original_parts[5]
+                        }
+
+                        print(
+                            f"- {str(count).zfill(2)}. {contact['Name']:<20}"
+                            f"{contact['Age']:<10}"
+                            f"{contact['Address']:<30}"
+                            f"{contact['Phone']:<15}"
+                            f"{contact['ID']:<70}"
+                        )
+
+                        count += 1
+
+                        found = True
+
+            if header_printed :
+                print("=" * 80) 
+            
+    except FileNotFoundError :
+
+        print(f"❌ Error: User data file not found: {file_path}")
+        return
 
     if not found :
 
@@ -149,7 +191,7 @@ def get_info(current_data, termination_terms) :
         print("📝 Partial Update Mode (Leave blank to keep current value):")
 
         # --- Name ---
-        new_name = input(f"   Name (Current: {current_name}): ").strip().capitalize()
+        new_name = input(f"   Name (Current: {current_name}): ").strip().title()
         new_name = new_name if new_name else current_name
 
         # --- Age ---
@@ -192,7 +234,7 @@ def get_info(current_data, termination_terms) :
         print("📝 Full Re-entry Mode (All fields must be filled):")
 
         # --- New Name ---
-        new_name = input("   New Name: ").strip().capitalize()
+        new_name = input("   New Name: ").strip().title()
         while not new_name :
             new_name = input("   Name Can\'t Be Empty. Enter Name: ")
 
